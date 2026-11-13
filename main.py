@@ -1,293 +1,271 @@
 
-# E-COMMERCE PRODUCT RETURN PREDICTION
-# RANDOM FOREST MACHINE LEARNING
-
-# STEP 1: IMPORT LIBRARIES
-
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 import joblib
+import io
+import os
 
-from sklearn.model_selection import train_test_split
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline
-from sklearn.ensemble import RandomForestClassifier
+app = FastAPI(title="E-Commerce Product Return Prediction API")
 
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    confusion_matrix,
-    classification_report
+BASE_DIR = Path(__file__).resolve().parent
+HTML_FILE = BASE_DIR / "index.html"
+MODEL_FILE = BASE_DIR / "ecommerce_return_model.pkl"
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# STEP 2: LOAD DATASET
-
-df = pd.read_csv("ecommerce_returns.csv")
-
-print("\nDATASET LOADED SUCCESSFULLY")
-print(df.head())
-
-# STEP 3: EXPLORE DATASET
-
-print("\nDataset Shape:", df.shape)
-print("\nColumns:", df.columns.tolist())
-print("\nMissing Values:\n", df.isnull().sum())
-
-# STEP 4: REMOVE DUPLICATES
-
-df = df.drop_duplicates()
-
-# STEP 5: REMOVE ID, DATE AND LEAKAGE COLUMNS
-
-columns_to_remove = [
-    "order_id",
-    "customer_id",
-    "product_id",
-    "order_date",
-    "delivered_date",
-    "request_date",
-    "return_date",
-    "refund_amount",
-    "refund_status",
-    "return_reason",
-    "return_requested",
-    "return_completed",
-    "refund_date",
-    "return_approved",
-    "returned_quantity"
+FEATURES = [
+    "category",
+    "price",
+    "discount",
+    "quantity",
+    "payment_method",
+    "region",
+    "customer_age",
+    "customer_gender",
+    "shipping_cost",
+    "total_amount",
+    "profit_margin"
 ]
 
-df = df.drop(
-    columns=columns_to_remove,
-    errors="ignore"
-)
+NUMERIC_FEATURES = [
+    "price",
+    "discount",
+    "quantity",
+    "customer_age",
+    "shipping_cost",
+    "total_amount",
+    "profit_margin"
+]
 
-# STEP 6: SELECT TARGET COLUMN
+CATEGORICAL_FEATURES = [
+    "category",
+    "payment_method",
+    "region",
+    "customer_gender"
+]
 
-target_column = "returned"
 
-if target_column not in df.columns:
-    raise ValueError(
-        "Target column 'returned' not found. "
-        f"Available columns: {df.columns.tolist()}"
-    )
+def load_model():
+    if not MODEL_FILE.exists():
+        raise HTTPException(
+            status_code=500,
+            detail="Model file ecommerce_return_model.pkl was not found."
+        )
+    return joblib.load(MODEL_FILE)
 
-df = df.dropna(subset=[target_column])
 
-# Convert common Yes/No target values to 1/0
-target_text = df[target_column].astype(str).str.strip().str.lower()
+@app.get("/")
+def home():
+    if not HTML_FILE.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="index.html was not found in the project folder."
+        )
+    return FileResponse(HTML_FILE)
 
-target_mapping = {
-    "yes": 1,
-    "returned": 1,
-    "true": 1,
-    "1": 1,
-    "no": 0,
-    "not returned": 0,
-    "false": 0,
-    "0": 0
-}
 
-if set(target_text.unique()).issubset(target_mapping.keys()):
-    y = target_text.map(target_mapping).astype(int)
-else:
-    raise ValueError(
-        "Please check the returned column. "
-        "Expected Yes/No or 1/0 values."
-    )
+@app.get("/health")
+def health():
+    return {"status": "running"}
 
-X = df.drop(columns=[target_column])
 
-print("\nInput Features:")
-print(X.head())
+@app.get("/model-info")
+def model_info():
+    model = load_model()
+    return {
+        "model_name": "E-Commerce Return Prediction Model",
+        "features": FEATURES,
+        "numeric_features": NUMERIC_FEATURES,
+        "categorical_features": CATEGORICAL_FEATURES,
+        "model_loaded": model is not None
+    }
 
-print("\nTarget Distribution:")
-print(y.value_counts())
 
-# STEP 7: IDENTIFY NUMERICAL AND CATEGORICAL FEATURES
+@app.post("/predict-csv")
+async def predict_csv(file: UploadFile = File(...)):
+    if not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Please upload a CSV file.")
 
-numerical_features = X.select_dtypes(
-    include=["number"]
-).columns.tolist()
+    try:
+        contents = await file.read()
+        df = pd.read_csv(io.BytesIO(contents))
 
-categorical_features = X.select_dtypes(
-    include=["object", "category", "bool"]
-).columns.tolist()
+        missing = [col for col in FEATURES if col not in df.columns]
+        if missing:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Missing required columns: {missing}"
+            )
 
-print("\nNumerical Features:", numerical_features)
-print("Categorical Features:", categorical_features)
+        model = load_model()
+        predictions = model.predict(df[FEATURES])
 
-if not numerical_features and not categorical_features:
-    raise ValueError("No usable input features were found.")
+        if hasattr(model, "predict_proba"):
+            probabilities = model.predict_proba(df[FEATURES])
+            classes = list(model.classes_)
+            positive_index = next(
+                (i for i, value in enumerate(classes)
+                 if str(value).strip().lower() in ["yes", "1", "true"]),
+                len(classes) - 1
+            )
+            return_probabilities = probabilities[:, positive_index]
+        else:
+            return_probabilities = [None] * len(df)
 
-# STEP 8: DATA PREPROCESSING
+        df["predicted_return"] = predictions
+        df["return_probability"] = return_probabilities
 
-numerical_transformer = Pipeline(steps=[
-    ("imputer", SimpleImputer(strategy="median"))
-])
+        if all(value is not None for value in return_probabilities):
+            df["return_risk_percent"] = (
+                df["return_probability"] * 100
+            ).round(2)
 
-categorical_transformer = Pipeline(steps=[
-    ("imputer", SimpleImputer(strategy="most_frequent")),
-    ("encoder", OneHotEncoder(handle_unknown="ignore"))
-])
+        output = io.BytesIO()
+        df.to_csv(output, index=False)
+        output.seek(0)
 
-preprocessor = ColumnTransformer(
-    transformers=[
-        ("num", numerical_transformer, numerical_features),
-        ("cat", categorical_transformer, categorical_features)
-    ]
-)
+        from fastapi.responses import StreamingResponse
 
-# STEP 9: SPLIT DATASET
+        return StreamingResponse(
+            output,
+            media_type="text/csv",
+            headers={
+                "Content-Disposition":
+                'attachment; filename="return_predictions.csv"'
+            }
+        )
 
-if y.nunique() != 2 or y.value_counts().min() < 2:
-    raise ValueError(
-        "You need at least two examples of each target class."
-    )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    test_size=0.2,
-    random_state=42,
-    stratify=y
-)
 
-print("\nTraining Data:", X_train.shape)
-print("Testing Data:", X_test.shape)
+@app.post("/retrain")
+async def retrain_model(file: UploadFile = File(...)):
+    if not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Please upload a CSV file.")
 
-# STEP 10: INITIALIZE RANDOM FOREST
+    try:
+        from sklearn.model_selection import train_test_split
+        from sklearn.metrics import accuracy_score, roc_auc_score
+        from sklearn.ensemble import RandomForestClassifier
+        from sklearn.compose import ColumnTransformer
+        from sklearn.preprocessing import OneHotEncoder, StandardScaler
+        from sklearn.pipeline import Pipeline
 
-rf_model = RandomForestClassifier(
-    n_estimators=100,
-    random_state=42,
-    class_weight="balanced"
-)
+        contents = await file.read()
+        df = pd.read_csv(io.BytesIO(contents))
 
-# STEP 11: TRAIN MODEL
+        required = FEATURES + ["returned"]
+        missing = [col for col in required if col not in df.columns]
 
-model = Pipeline(steps=[
-    ("preprocessor", preprocessor),
-    ("classifier", rf_model)
-])
+        if missing:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Missing required columns: {missing}"
+            )
 
-model.fit(X_train, y_train)
+        X = df[FEATURES].copy()
+        y = df["returned"].copy()
 
-print("\nMODEL TRAINING COMPLETED!")
+        if y.dtype == object:
+            y = y.astype(str).str.strip().str.lower().map({
+                "yes": 1,
+                "no": 0,
+                "1": 1,
+                "0": 0,
+                "true": 1,
+                "false": 0
+            })
 
-# STEP 12: MAKE PREDICTIONS
+        if y.isna().any() or y.nunique() != 2:
+            raise HTTPException(
+                status_code=400,
+                detail="The returned column must contain two valid classes: Yes/No or 1/0."
+            )
 
-y_pred = model.predict(X_test)
+        if y.value_counts().min() < 2:
+            raise HTTPException(
+                status_code=400,
+                detail="Each return class must have at least two rows."
+            )
 
-print("\nActual Values:")
-print(y_test.values)
+        numeric_transformer = Pipeline([
+            ("scaler", StandardScaler())
+        ])
 
-print("\nPredicted Values:")
-print(y_pred)
+        categorical_transformer = Pipeline([
+            ("encoder", OneHotEncoder(handle_unknown="ignore"))
+        ])
 
-# STEP 13: EVALUATE MODEL
+        preprocessor = ColumnTransformer([
+            ("num", numeric_transformer, NUMERIC_FEATURES),
+            ("cat", categorical_transformer, CATEGORICAL_FEATURES)
+        ])
 
-print("\nAccuracy:",
-      accuracy_score(y_test, y_pred) * 100, "%")
+        pipeline = Pipeline([
+            ("preprocessor", preprocessor),
+            ("classifier", RandomForestClassifier(
+                n_estimators=200,
+                random_state=42,
+                class_weight="balanced"
+            ))
+        ])
 
-print("Precision:",
-      precision_score(y_test, y_pred, zero_division=0))
+        X_train, X_test, y_train, y_test = train_test_split(
+            X,
+            y,
+            test_size=0.2,
+            random_state=42,
+            stratify=y
+        )
 
-print("Recall:",
-      recall_score(y_test, y_pred, zero_division=0))
+        pipeline.fit(X_train, y_train)
+        predictions = pipeline.predict(X_test)
 
-print("F1 Score:",
-      f1_score(y_test, y_pred, zero_division=0))
+        accuracy = accuracy_score(y_test, predictions)
 
-print("\nClassification Report:")
-print(classification_report(
-    y_test,
-    y_pred,
-    zero_division=0
-))
+        auc = None
+        if hasattr(pipeline, "predict_proba"):
+            probabilities = pipeline.predict_proba(X_test)[:, 1]
+            auc = roc_auc_score(y_test, probabilities)
 
-# STEP 14: CONFUSION MATRIX GRAPH
+        temporary_model = BASE_DIR / "ecommerce_return_model_temp.pkl"
+        backup_model = BASE_DIR / "ecommerce_return_model_backup.pkl"
 
-cm = confusion_matrix(y_test, y_pred)
+        joblib.dump(pipeline, temporary_model)
 
-plt.figure(figsize=(7, 5))
+        if MODEL_FILE.exists():
+            import shutil
+            shutil.copy2(MODEL_FILE, backup_model)
 
-sns.heatmap(
-    cm,
-    annot=True,
-    fmt="d",
-    cmap="Blues"
-)
+        os.replace(temporary_model, MODEL_FILE)
 
-plt.title("E-Commerce Return Prediction")
-plt.xlabel("Predicted")
-plt.ylabel("Actual")
-plt.tight_layout()
-plt.show()
+        return {
+            "message": "Model retrained successfully",
+            "accuracy": round(float(accuracy), 4),
+            "roc_auc": round(float(auc), 4) if auc is not None else None,
+            "training_rows": len(X_train),
+            "testing_rows": len(X_test),
+            "backup_created": backup_model.exists()
+        }
 
-# STEP 15: RETURN DISTRIBUTION GRAPH
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-plt.figure(figsize=(7, 5))
 
-sns.countplot(
-    data=df,
-    x="returned",
-    order=["No", "Yes"]
-)
-
-plt.title("Product Return Distribution")
-plt.xlabel("Return Status")
-plt.ylabel("Number of Orders")
-plt.tight_layout()
-plt.show()
-
-# STEP 16: FEATURE IMPORTANCE GRAPH
-
-feature_names = (
-    model.named_steps["preprocessor"]
-    .get_feature_names_out()
-)
-
-importance = (
-    model.named_steps["classifier"]
-    .feature_importances_
-)
-
-importance_df = pd.DataFrame({
-    "Feature": feature_names,
-    "Importance": importance
-}).sort_values(
-    by="Importance",
-    ascending=False
-)
-
-print("\nTOP 10 IMPORTANT FEATURES:")
-print(importance_df.head(10))
-
-plt.figure(figsize=(9, 6))
-
-sns.barplot(
-    data=importance_df.head(10),
-    x="Importance",
-    y="Feature"
-)
-
-plt.title("Top 10 Important Features")
-plt.tight_layout()
-plt.show()
-
-# STEP 17: SAVE TRAINED MODEL
-
-joblib.dump(
-    model,
-    "ecommerce_return_model.pkl"
-)
-
-print("\nMODEL SAVED SUCCESSFULLY!")
-print("File: ecommerce_return_model.pkl")
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
