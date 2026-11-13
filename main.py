@@ -5,11 +5,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
 import pandas as pd
+import numpy as np
 import joblib
 import io
 import os
@@ -20,24 +21,22 @@ import shutil
 # --------------------------------------------------
 
 app = FastAPI(
-    title="ReturnGuard - E-Commerce Return Prediction",
+    title="ReturnGuard",
     description="E-Commerce Product Return Prediction API",
-    version="1.0.0"
+    version="1.0"
 )
 
 BASE_DIR = Path(__file__).resolve().parent
-
 HTML_FILE = BASE_DIR / "index.html"
 MODEL_FILE = BASE_DIR / "ecommerce_return_model.pkl"
 BACKUP_FILE = BASE_DIR / "ecommerce_return_model_backup.pkl"
-TEMP_MODEL_FILE = BASE_DIR / "ecommerce_return_model_temp.pkl"
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 # --------------------------------------------------
@@ -81,7 +80,6 @@ CATEGORICAL_FEATURES = [
 # --------------------------------------------------
 
 def load_model():
-
     if not MODEL_FILE.exists():
         raise HTTPException(
             status_code=500,
@@ -90,7 +88,6 @@ def load_model():
 
     try:
         return joblib.load(MODEL_FILE)
-
     except Exception as error:
         raise HTTPException(
             status_code=500,
@@ -99,16 +96,15 @@ def load_model():
 
 
 # --------------------------------------------------
-# HOME PAGE - SERVE HTML
+# HOME PAGE
 # --------------------------------------------------
 
 @app.get("/")
 def home():
-
     if not HTML_FILE.exists():
         raise HTTPException(
             status_code=404,
-            detail="index.html not found. Place it beside main.py."
+            detail="index.html not found. Check your project folder."
         )
 
     return FileResponse(
@@ -123,30 +119,9 @@ def home():
 
 @app.get("/health")
 def health():
-
     return {
         "status": "running",
         "application": "ReturnGuard"
-    }
-
-
-# --------------------------------------------------
-# API INFORMATION
-# --------------------------------------------------
-
-@app.get("/api")
-def api_home():
-
-    return {
-        "message": "ReturnGuard FastAPI Backend is Running Successfully!",
-        "endpoints": [
-            "/",
-            "/docs",
-            "/health",
-            "/model-info",
-            "/predict-csv",
-            "/retrain"
-        ]
     }
 
 
@@ -156,11 +131,10 @@ def api_home():
 
 @app.get("/model-info")
 def model_info():
-
     model = load_model()
 
     return {
-        "model_name": "E-Commerce Return Prediction Model",
+        "model_name": "E-Commerce Return Prediction",
         "model_loaded": model is not None,
         "features": FEATURES,
         "numeric_features": NUMERIC_FEATURES,
@@ -169,7 +143,7 @@ def model_info():
 
 
 # --------------------------------------------------
-# CSV PREDICTION
+# CSV BATCH PREDICTION
 # --------------------------------------------------
 
 @app.post("/predict-csv")
@@ -182,9 +156,7 @@ async def predict_csv(file: UploadFile = File(...)):
         )
 
     try:
-
         contents = await file.read()
-
         df = pd.read_csv(io.BytesIO(contents))
 
         missing = [
@@ -198,8 +170,13 @@ async def predict_csv(file: UploadFile = File(...)):
                 detail=f"Missing columns: {missing}"
             )
 
-        model = load_model()
+        if df[FEATURES].isnull().any().any():
+            raise HTTPException(
+                status_code=400,
+                detail="Required feature columns contain missing values."
+            )
 
+        model = load_model()
         X = df[FEATURES]
 
         predictions = model.predict(X)
@@ -207,9 +184,7 @@ async def predict_csv(file: UploadFile = File(...)):
         df["predicted_return"] = predictions
 
         if hasattr(model, "predict_proba"):
-
             probabilities = model.predict_proba(X)
-
             classes = list(model.classes_)
 
             positive_index = next(
@@ -222,19 +197,13 @@ async def predict_csv(file: UploadFile = File(...)):
             )
 
             if positive_index is not None:
-
-                return_probabilities = probabilities[:, positive_index]
-
-                df["return_probability"] = return_probabilities
-
+                df["return_probability"] = probabilities[:, positive_index]
                 df["return_risk_percent"] = (
-                    return_probabilities * 100
+                    df["return_probability"] * 100
                 ).round(2)
 
         output = io.BytesIO()
-
         df.to_csv(output, index=False)
-
         output.seek(0)
 
         return StreamingResponse(
@@ -248,9 +217,7 @@ async def predict_csv(file: UploadFile = File(...)):
 
     except HTTPException:
         raise
-
     except Exception as error:
-
         raise HTTPException(
             status_code=500,
             detail=str(error)
@@ -270,10 +237,10 @@ async def retrain_model(file: UploadFile = File(...)):
             detail="Please upload a CSV file."
         )
 
+    temporary_model = BASE_DIR / "ecommerce_return_model_temp.pkl"
+
     try:
-
         contents = await file.read()
-
         df = pd.read_csv(io.BytesIO(contents))
 
         required_columns = FEATURES + ["returned"]
@@ -290,11 +257,9 @@ async def retrain_model(file: UploadFile = File(...)):
             )
 
         X = df[FEATURES].copy()
-
         y = df["returned"].copy()
 
         if y.dtype == object:
-
             y = (
                 y.astype(str)
                 .str.strip()
@@ -310,20 +275,16 @@ async def retrain_model(file: UploadFile = File(...)):
             )
 
         if y.isna().any() or y.nunique() != 2:
-
             raise HTTPException(
                 status_code=400,
                 detail="returned must contain two valid classes: Yes/No or 1/0."
             )
 
         if y.value_counts().min() < 2:
-
             raise HTTPException(
                 status_code=400,
                 detail="Each class needs at least two records."
             )
-
-        # Preprocessing
 
         numeric_pipeline = Pipeline([
             ("scaler", StandardScaler())
@@ -338,8 +299,6 @@ async def retrain_model(file: UploadFile = File(...)):
             ("cat", categorical_pipeline, CATEGORICAL_FEATURES)
         ])
 
-        # Random Forest model
-
         pipeline = Pipeline([
             ("preprocessor", preprocessor),
             ("classifier", RandomForestClassifier(
@@ -349,8 +308,6 @@ async def retrain_model(file: UploadFile = File(...)):
             ))
         ])
 
-        # Split dataset
-
         X_train, X_test, y_train, y_test = train_test_split(
             X,
             y,
@@ -358,8 +315,6 @@ async def retrain_model(file: UploadFile = File(...)):
             random_state=42,
             stratify=y
         )
-
-        # Train
 
         pipeline.fit(X_train, y_train)
 
@@ -370,24 +325,17 @@ async def retrain_model(file: UploadFile = File(...)):
         auc = None
 
         if hasattr(pipeline, "predict_proba"):
-
             probabilities = pipeline.predict_proba(X_test)[:, 1]
-
             auc = roc_auc_score(y_test, probabilities)
 
-        # Save new model to temporary file first
+        # Save newly trained model temporarily
+        joblib.dump(pipeline, temporary_model)
 
-        joblib.dump(pipeline, TEMP_MODEL_FILE)
-
-        # Back up existing model before replacing it
-
+        # Preserve previous model before replacement
         if MODEL_FILE.exists():
-
             shutil.copy2(MODEL_FILE, BACKUP_FILE)
 
-        # Replace model only after successful training
-
-        os.replace(TEMP_MODEL_FILE, MODEL_FILE)
+        os.replace(temporary_model, MODEL_FILE)
 
         return {
             "message": "Model retrained successfully",
@@ -400,13 +348,14 @@ async def retrain_model(file: UploadFile = File(...)):
 
     except HTTPException:
         raise
-
     except Exception as error:
-
         raise HTTPException(
             status_code=500,
             detail=str(error)
         )
+    finally:
+        if temporary_model.exists():
+            temporary_model.unlink()
 
 
 # --------------------------------------------------
@@ -414,7 +363,6 @@ async def retrain_model(file: UploadFile = File(...)):
 # --------------------------------------------------
 
 if __name__ == "__main__":
-
     import uvicorn
 
     uvicorn.run(
