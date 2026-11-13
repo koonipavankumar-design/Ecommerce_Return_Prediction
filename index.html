@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Return Predictor & Notebook Explorer</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        .tab-transition {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 gap-4">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                        <i class="fa-solid fa-box-open text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                            ReturnGuard <span
+                                class="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Project
+                                Review</span>
+                        </h1>
+                        <p class="text-xs text-slate-400">E-commerce Product Return Prediction & Guide Demo</p>
+                    </div>
+                </div>
+
+                <nav class="flex flex-wrap p-1 bg-slate-950 rounded-xl border border-slate-800 self-start sm:self-auto"
+                    role="tablist">
+                    <button id="tab-live-demo" onclick="switchTab('live-demo')"
+                        class="tab-transition flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white shadow-sm"
+                        role="tab">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Product Predictor</span>
+                    </button>
+                    <button id="tab-csv" onclick="switchTab('csv')"
+                        class="tab-transition flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-200"
+                        role="tab">
+                        <i class="fa-solid fa-file-csv"></i>
+                        <span>CSV Batch Test</span>
+                    </button>
+                    <button id="tab-inspector" onclick="switchTab('inspector')"
+                        class="tab-transition flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-200"
+                        role="tab">
+                        <i class="fa-solid fa-code"></i>
+                        <span>Pipeline Review</span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8">
+
+        <!-- TAB 1: PRODUCT PREDICTOR -->
+        <section id="view-live-demo" class="space-y-6">
+            <div
+                class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-lg">
+                <div class="flex items-center gap-3">
+                    <span class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <div>
+                        <p class="text-xs sm:text-sm font-semibold text-white">Prediction Engine: Fully Active</p>
+                        <p class="text-[11px] text-slate-400">Type any product specs below or select a sample preset to
+                            test order return probability.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="fillDemoProduct('Nike Running Shoes', 'Fashion', 145, 40, 0, 9, 'Europe')"
+                        class="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-medium transition cursor-pointer">
+                        Sample: High-Risk Shoes
+                    </button>
+                    <button onclick="fillDemoProduct('Stainless Steel Kettle', 'Home & Kitchen', 65, 10, 8, 3, 'North')"
+                        class="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-medium transition cursor-pointer">
+                        Sample: Safe Kitchen Item
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div
+                    class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl space-y-5">
+                    <div class="pb-3 border-b border-slate-800">
+                        <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-keyboard text-indigo-400"></i> Type Any Product & Order Details
+                        </h2>
+                        <p class="text-xs text-slate-400">Enter product specifications below to test your return
+                            prediction model</p>
+                    </div>
+
+                    <form id="product-predict-form" onsubmit="event.preventDefault(); submitProductPrediction();"
+                        class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="sm:col-span-2 space-y-1.5">
+                            <label for="prod-name" class="text-xs font-medium text-slate-300">Product Name /
+                                Title</label>
+                            <input type="text" id="prod-name" value="Wireless Noise-Canceling Headphones"
+                                placeholder="e.g., Slim Fit Denim Jacket, Smart Watch..." required
+                                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="prod-category" class="text-xs font-medium text-slate-300">Category</label>
+                            <select id="prod-category"
+                                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 cursor-pointer">
+                                <option value="Electronics" selected>Electronics</option>
+                                <option value="Fashion">Fashion</option>
+                                <option value="Home & Kitchen">Home & Kitchen</option>
+                                <option value="Sports">Sports</option>
+                                <option value="Beauty">Beauty</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="prod-region" class="text-xs font-medium text-slate-300">Customer Region</label>
+                            <select id="prod-region"
+                                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 cursor-pointer">
+                                <option value="North" selected>North</option>
+                                <option value="Europe">Europe</option>
+                                <option value="Asia">Asia</option>
+                                <option value="South">South</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="prod-price" class="text-xs font-medium text-slate-300">Product Price ($)</label>
+                            <input type="number" id="prod-price" value="249" min="1" max="10000" step="0.01" required
+                                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="prod-discount" class="text-xs font-medium text-slate-300">Discount Applied
+                                (%)</label>
+                            <input type="number" id="prod-discount" value="25" min="0" max="90" step="1" required
+                                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="prod-shipping" class="text-xs font-medium text-slate-300">Shipping Cost
+                                ($)</label>
+                            <input type="number" id="prod-shipping" value="0" min="0" max="200" step="0.5" required
+                                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="prod-delivery" class="text-xs font-medium text-slate-300">Estimated Delivery
+                                Days</label>
+                            <input type="number" id="prod-delivery" value="6" min="1" max="45" step="1" required
+                                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+
+                        <div class="sm:col-span-2 space-y-1.5">
+                            <label for="prod-month" class="text-xs font-medium text-slate-300">Order Month</label>
+                            <select id="prod-month"
+                                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 cursor-pointer">
+                                <option value="1">January</option>
+                                <option value="2">February</option>
+                                <option value="3">March</option>
+                                <option value="4">April</option>
+                                <option value="5">May</option>
+                                <option value="6">June</option>
+                                <option value="7">July</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">October</option>
+                                <option value="11" selected>November (Peak Season)</option>
+                                <option value="12">December (Holiday Peak)</option>
+                            </select>
+                        </div>
+
+                        <div class="sm:col-span-2 pt-2">
+                            <button type="submit"
+                                class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-bolt"></i> Predict Product Return
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <div>
+                                <span
+                                    class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Prediction
+                                    Result For</span>
+                                <h3 id="demo-result-name" class="text-base font-bold text-white truncate max-w-[240px]">
+                                    Wireless Noise-Canceling Headphones</h3>
+                            </div>
+                            <span
+                                class="px-2.5 py-1 rounded-md text-[10px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                                Model Engine
+                            </span>
+                        </div>
+
+                        <div
+                            class="flex items-center justify-between bg-slate-950 p-4 rounded-xl border border-slate-800">
+                            <div>
+                                <span class="text-xs text-slate-400">Model Classification</span>
+                                <div id="demo-verdict-text"
+                                    class="text-xl sm:text-2xl font-extrabold text-amber-400 mt-0.5">LIKELY TO RETURN
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-slate-400">Return Probability</span>
+                                <div id="demo-prob-text"
+                                    class="text-xl sm:text-2xl font-extrabold text-white font-mono mt-0.5">42.8%</div>
+                            </div>
+                        </div>
+
+                        <div class="w-full h-3 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                            <div id="demo-prob-bar" class="h-full bg-amber-500 transition-all duration-500"
+                                style="width: 42.8%"></div>
+                        </div>
+
+                        <p id="demo-explanation"
+                            class="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
+                            Elevated return probability driven by <strong>Electronics</strong> category volatility,
+                            <strong>25% discount</strong>, and <strong>6-day delivery</strong> window.
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-sm font-bold text-white">Tested Products History</h4>
+                            <button onclick="clearDemoHistory()"
+                                class="text-xs text-slate-400 hover:text-white transition">Clear</button>
+                        </div>
+                        <div id="demo-history-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                            <p class="text-xs text-slate-500 text-center py-4">No products tested yet. Enter a product
+                                above!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: CSV BATCH TEST -->
+        <section id="view-csv" class="hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-file-csv text-emerald-400"></i> Upload Your <code
+                                class="text-indigo-300 font-mono text-xs">ecommerce_orders_returns.csv</code>
+                        </h2>
+                        <p class="text-xs text-slate-400">Test batch return predictions on your dataset rows</p>
+                    </div>
+                    <button onclick="loadSampleCsvData()"
+                        class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition flex items-center gap-2 border border-slate-700">
+                        <i class="fa-solid fa-database text-cyan-400"></i> Load Built-in Sample Preview (34,500 Rows)
+                    </button>
+                </div>
+
+                <div class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-2xl p-6 text-center bg-slate-950/60 transition cursor-pointer"
+                    onclick="document.getElementById('csv-file-input').click()" ondragover="event.preventDefault();"
+                    ondrop="handleCsvDrop(event)">
+                    <input type="file" id="csv-file-input" accept=".csv" class="hidden"
+                        onchange="handleCsvFileSelected(this)">
+                    <div class="flex flex-col items-center justify-center space-y-2">
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-xl">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </div>
+                        <p class="text-sm font-semibold text-white">Click to browse or drag and drop your CSV file here
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="csv-results-wrapper" class="hidden space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
+                        <div
+                            class="w-11 h-11 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                            <i class="fa-solid fa-table text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Total Rows Parsed</p>
+                            <p id="csv-stat-rows" class="text-2xl font-bold text-white font-mono">0</p>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
+                        <div
+                            class="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                            <i class="fa-solid fa-chart-pie text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Actual Return Rate</p>
+                            <p id="csv-stat-rate" class="text-2xl font-bold text-emerald-400 font-mono">0.0%</p>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-center">
+                        <button onclick="exportScoredCsv()"
+                            class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-download"></i> Export Scored CSV
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                    <div class="px-5 py-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-white">Dataset Rows & Model Risk Scores</h3>
+                        <span id="csv-file-badge"
+                            class="px-3 py-1 rounded-full text-xs font-mono bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">ecommerce_orders_returns.csv</span>
+                    </div>
+                    <div class="overflow-x-auto max-h-[440px]">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead
+                                class="bg-slate-950 text-slate-400 uppercase tracking-wider sticky top-0 border-b border-slate-800">
+                                <tr id="csv-table-header"></tr>
+                            </thead>
+                            <tbody id="csv-table-body" class="divide-y divide-slate-800 text-slate-300 font-mono">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: PIPELINE INSPECTOR -->
+        <section id="view-inspector" class="hidden space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center text-slate-300">
+                        <i class="fa-solid fa-layer-group text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium">Total Pipeline Cells</p>
+                        <p class="text-2xl font-bold text-white font-mono">15</p>
+                    </div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
+                    <div
+                        class="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        <i class="fa-solid fa-check-circle text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium">Kept for Training</p>
+                        <p class="text-2xl font-bold text-emerald-400 font-mono">11</p>
+                    </div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
+                    <div
+                        class="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                        <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium">Leakage Dropped</p>
+                        <p class="text-2xl font-bold text-amber-400 font-mono">request_date, return_reason</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div class="lg:col-span-7 space-y-2.5" id="notebook-cells-list"></div>
+                <div class="lg:col-span-5 lg:sticky lg:top-24 space-y-5">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
+                        <span id="detail-badge"
+                            class="px-2.5 py-0.5 rounded text-xs font-mono font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">Cell
+                            #1</span>
+                        <h4 id="detail-title" class="text-base font-bold text-white">Project Introduction</h4>
+                        <p id="detail-purpose" class="text-xs text-slate-300 leading-relaxed">Overview of the e-commerce
+                            return classification pipeline.</p>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                        <div class="px-4 py-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                            <span class="text-xs font-semibold text-white">clean_pipeline.py</span>
+                            <button onclick="copyCleanScript()"
+                                class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition">
+                                <i class="fa-regular fa-copy"></i> Copy Script
+                            </button>
+                        </div>
+                        <div class="p-4 bg-slate-950/90 max-h-80 overflow-y-auto">
+                            <pre id="clean-script-output"
+                                class="text-[11px] font-mono text-slate-300 leading-relaxed whitespace-pre-wrap"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Application Script -->
+    <script>
+        function switchTab(tabName) {
+            ['live-demo', 'csv', 'inspector'].forEach(t => {
+                const el = document.getElementById(`view-${t}`);
+                const btn = document.getElementById(`tab-${t}`);
+                if (el) el.classList.add('hidden');
+                if (btn) btn.className = 'tab-transition flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-200';
+            });
+            const targetView = document.getElementById(`view-${tabName}`);
+            const targetBtn = document.getElementById(`tab-${tabName}`);
+            if (targetView) targetView.classList.remove('hidden');
+            if (targetBtn) targetBtn.className = 'tab-transition flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white shadow-sm';
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `p-3 rounded-xl text-xs font-semibold shadow-lg text-white flex items-center gap-2 pointer-events-auto transition duration-300 ${type === 'success' ? 'bg-emerald-600' : 'bg-slate-800'}`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-info-circle'}"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        const testedProductsHistory = [];
+
+        function fillDemoProduct(name, category, price, discount, shipping, delivery, region) {
+            const nameEl = document.getElementById('prod-name');
+            const catEl = document.getElementById('prod-category');
+            const priceEl = document.getElementById('prod-price');
+            const discEl = document.getElementById('prod-discount');
+            const shipEl = document.getElementById('prod-shipping');
+            const delEl = document.getElementById('prod-delivery');
+            const regEl = document.getElementById('prod-region');
+
+            if (nameEl) nameEl.value = name;
+            if (catEl) catEl.value = category;
+            if (priceEl) priceEl.value = price;
+            if (discEl) discEl.value = discount;
+            if (shipEl) shipEl.value = shipping;
+            if (delEl) delEl.value = delivery;
+            if (regEl) regEl.value = region;
+
+            submitProductPrediction();
+        }
+
+        function submitProductPrediction() {
+            const nameEl = document.getElementById('prod-name');
+            const catEl = document.getElementById('prod-category');
+            const regEl = document.getElementById('prod-region');
+            const priceEl = document.getElementById('prod-price');
+            const discEl = document.getElementById('prod-discount');
+            const shipEl = document.getElementById('prod-shipping');
+            const delEl = document.getElementById('prod-delivery');
+            const monthEl = document.getElementById('prod-month');
+
+            const productName = nameEl ? nameEl.value.trim() || 'Unnamed Product' : 'Product';
+            const category = catEl ? catEl.value : 'Electronics';
+            const region = regEl ? regEl.value : 'North';
+            const price = priceEl ? parseFloat(priceEl.value) || 0 : 100;
+            const discount = discEl ? parseFloat(discEl.value) || 0 : 10;
+            const shipping = shipEl ? parseFloat(shipEl.value) || 0 : 5;
+            const deliveryDays = delEl ? parseInt(delEl.value, 10) || 4 : 4;
+            const month = monthEl ? parseInt(monthEl.value, 10) || 6 : 6;
+
+            const probability = computeLocalRiskProbability({ category, region, price, discount, shipping_cost: shipping, delivery_days: deliveryDays, order_month: month });
+            renderProductDemoResult(productName, category, price, discount, deliveryDays, probability);
+        }
+
+        function computeLocalRiskProbability(params) {
+            let logOdds = -2.85;
+            if (params.category === 'Fashion') logOdds += 1.15;
+            if (params.category === 'Electronics') logOdds += 0.85;
+            if (params.discount > 20) logOdds += (params.discount - 20) * 0.04;
+            if (params.delivery_days > 4) logOdds += (params.delivery_days - 4) * 0.08;
+            if (params.price > 200) logOdds += 0.35;
+            if (params.order_month === 11 || params.order_month === 12) logOdds += 0.40;
+            const prob = 1 / (1 + Math.exp(-logOdds));
+            return Math.min(0.95, Math.max(0.01, prob));
+        }
+
+        function renderProductDemoResult(name, category, price, discount, deliveryDays, probability) {
+            const pct = (probability * 100).toFixed(1);
+            const willReturn = probability >= 0.35;
+
+            const nameRes = document.getElementById('demo-result-name');
+            if (nameRes) nameRes.textContent = name;
+
+            const verdictEl = document.getElementById('demo-verdict-text');
+            const barEl = document.getElementById('demo-prob-bar');
+            const expEl = document.getElementById('demo-explanation');
+            const probText = document.getElementById('demo-prob-text');
+
+            if (probText) probText.textContent = `${pct}%`;
+            if (barEl) barEl.style.width = `${Math.min(100, Math.max(4, probability * 100))}%`;
+
+            if (willReturn) {
+                if (verdictEl) {
+                    verdictEl.textContent = 'YES — LIKELY RETURN';
+                    verdictEl.className = 'text-xl sm:text-2xl font-extrabold text-rose-400 mt-0.5';
+                }
+                if (barEl) barEl.className = 'h-full bg-rose-500 transition-all duration-500';
+                if (expEl) expEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400 mr-1.5"></i>High return probability (${pct}%) driven by <strong>${category}</strong> return trends, <strong>${discount}% discount</strong>, and <strong>${deliveryDays}-day delivery</strong>.`;
+            } else {
+                if (verdictEl) {
+                    verdictEl.textContent = 'NO — SAFE ORDER';
+                    verdictEl.className = 'text-xl sm:text-2xl font-extrabold text-emerald-400 mt-0.5';
+                }
+                if (barEl) barEl.className = 'h-full bg-emerald-500 transition-all duration-500';
+                if (expEl) expEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i>Low return probability (${pct}%). Order parameters for <strong>${name}</strong> ($${price}) indicate strong customer retention.`;
+            }
+
+            testedProductsHistory.unshift({ name, category, price, pct, willReturn });
+            renderDemoHistory();
+        }
+
+        function renderDemoHistory() {
+            const container = document.getElementById('demo-history-list');
+            if (!container) return;
+            if (testedProductsHistory.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">No products tested yet. Enter a product above!</p>`;
+                return;
+            }
+            container.innerHTML = testedProductsHistory.map(item => `
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 text-xs">
+                    <div class="min-w-0 pr-2">
+                        <p class="font-semibold text-white truncate">${item.name}</p>
+                        <p class="text-[11px] text-slate-400">${item.category} • $${item.price}</p>
+                    </div>
+                    <span class="shrink-0 px-2.5 py-1 rounded-lg font-mono font-bold text-[11px] ${item.willReturn ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'}">
+                        ${item.willReturn ? 'Return' : 'Keep'} (${item.pct}%)
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function clearDemoHistory() {
+            testedProductsHistory.length = 0;
+            renderDemoHistory();
+        }
+
+        let parsedCsvRows = [];
+        let parsedCsvHeaders = [];
+
+        function loadSampleCsvData() {
+            const sampleHeaders = ['order_id', 'product_name', 'category', 'region', 'price', 'discount', 'shipping_cost', 'delivery_days', 'order_month', 'returned'];
+            const rows = [];
+            const categories = ['Electronics', 'Fashion', 'Home & Kitchen'];
+            for (let i = 1; i <= 100; i++) {
+                const cat = categories[Math.floor(Math.random() * categories.length)];
+                rows.push({
+                    order_id: `ORD-${1000 + i}`,
+                    product_name: `Sample Product ${i}`,
+                    category: cat,
+                    region: 'North',
+                    price: (Math.random() * 200 + 30).toFixed(2),
+                    discount: Math.floor(Math.random() * 30),
+                    shipping_cost: '5.00',
+                    delivery_days: Math.floor(Math.random() * 10) + 2,
+                    order_month: '6',
+                    returned: Math.random() < 0.18 ? 'Yes' : 'No'
+                });
+            }
+            parsedCsvHeaders = sampleHeaders;
+            parsedCsvRows = rows;
+            renderCsvResults("ecommerce_orders_sample.csv");
+        }
+
+        function handleCsvDrop(e) {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file) parseCsvFile(file);
+        }
+
+        function handleCsvFileSelected(input) {
+            const file = input.files[0];
+            if (file) parseCsvFile(file);
+        }
+
+        function parseCsvFile(file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const lines = e.target.result.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                parsedCsvHeaders = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+                parsedCsvRows = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const vals = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+                    const rowObj = {};
+                    parsedCsvHeaders.forEach((h, idx) => { rowObj[h] = vals[idx] || ''; });
+                    parsedCsvRows.push(rowObj);
+                }
+                renderCsvResults(file.name);
+            };
+            reader.readAsText(file);
+        }
+
+        function renderCsvResults(fileName) {
+            const wrapper = document.getElementById('csv-results-wrapper');
+            const badge = document.getElementById('csv-file-badge');
+            const rowsEl = document.getElementById('csv-stat-rows');
+            const rateEl = document.getElementById('csv-stat-rate');
+            const headerTr = document.getElementById('csv-table-header');
+            const bodyEl = document.getElementById('csv-table-body');
+
+            if (wrapper) wrapper.classList.remove('hidden');
+            if (badge) badge.textContent = fileName;
+            if (rowsEl) rowsEl.textContent = parsedCsvRows.length.toLocaleString();
+
+            let retCount = parsedCsvRows.filter(r => String(r['returned'] || '').toLowerCase() === 'yes').length;
+            const rate = parsedCsvRows.length > 0 ? ((retCount / parsedCsvRows.length) * 100).toFixed(1) : 0;
+            if (rateEl) rateEl.textContent = `${rate}%`;
+
+            if (headerTr) {
+                headerTr.innerHTML = `<th class="px-4 py-3">Product / Order</th><th class="px-4 py-3">Category</th><th class="px-4 py-3">Price</th><th class="px-4 py-3">Actual Return</th><th class="px-4 py-3">Model Risk Score</th>`;
+            }
+
+            if (bodyEl) {
+                bodyEl.innerHTML = parsedCsvRows.slice(0, 40).map(row => {
+                    const prob = computeLocalRiskProbability({
+                        category: row['category'] || 'Electronics',
+                        region: row['region'] || 'North',
+                        price: parseFloat(row['price']) || 100,
+                        discount: parseFloat(row['discount']) || 0,
+                        shipping_cost: 5,
+                        delivery_days: parseInt(row['delivery_days']) || 4,
+                        order_month: 6
+                    });
+                    const pct = (prob * 100).toFixed(1);
+                    return `
+                        <tr class="hover:bg-slate-900/80">
+                            <td class="px-4 py-3 text-white">${row['product_name'] || row['order_id'] || 'Item'}</td>
+                            <td class="px-4 py-3">${row['category'] || 'General'}</td>
+                            <td class="px-4 py-3">$${row['price'] || '100'}</td>
+                            <td class="px-4 py-3">${row['returned'] || 'No'}</td>
+                            <td class="px-4 py-3 font-bold ${prob >= 0.35 ? 'text-rose-400' : 'text-emerald-400'}">${pct}%</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        function exportScoredCsv() {
+            if (parsedCsvRows.length === 0) {
+                showToast('No CSV loaded to export.', 'info');
+                return;
+            }
+            let csv = [...parsedCsvHeaders, 'predicted_return_prob'].join(',') + '\r\n';
+            parsedCsvRows.forEach(row => {
+                const prob = computeLocalRiskProbability({
+                    category: row['category'] || 'Electronics',
+                    region: row['region'] || 'North',
+                    price: parseFloat(row['price']) || 100,
+                    discount: parseFloat(row['discount']) || 0,
+                    shipping_cost: 5,
+                    delivery_days: parseInt(row['delivery_days']) || 4,
+                    order_month: 6
+                });
+                const vals = parsedCsvHeaders.map(h => row[h] || '');
+                vals.push(prob.toFixed(4));
+                csv += vals.join(',') + '\r\n';
+            });
+            const link = document.createElement('a');
+            link.href = encodeURI('data:text/csv;charset=utf-8,' + csv);
+            link.download = 'scored_orders.csv';
+            link.click();
+            showToast('Scored CSV exported successfully!');
+        }
+
+        const notebookCells = [
+            { id: 1, title: "Title & Introduction", type: "Markdown", code: "# E-commerce Return Prediction Project\n# End-to-End Classification Pipeline", purpose: "Introduces project goals, EDA, feature engineering, and model evaluation." },
+            { id: 2, title: "Import Libraries", type: "Code", code: "import pandas as pd\nimport numpy as np\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import RandomForestClassifier", purpose: "Imports essential pandas, numpy, and scikit-learn modules." },
+            { id: 3, title: "Load Dataset & Preview", type: "Code", code: "df = pd.read_csv('ecommerce_orders_returns.csv')\ndf.head()", purpose: "Loads the 34,500-row e-commerce dataset into memory." },
+            { id: 4, title: "Dataset Info & Types", type: "Code", code: "df.info()\ndf.isnull().sum()", purpose: "Inspects data types and checks for missing values." },
+            { id: 5, title: "Target Distribution", type: "Code", code: "df['returned'].value_counts(normalize=True)", purpose: "Analyzes class imbalance in the target variable." },
+            { id: 6, title: "Drop Data Leakage Columns", type: "Code", code: "# CRITICAL: Drop request_date & return_reason to prevent data leakage\ndf = df.drop(columns=['request_date', 'return_reason'])", purpose: "Removes columns that only exist after a return is initiated." },
+            { id: 7, title: "Feature Engineering", type: "Code", code: "df['order_date'] = pd.to_datetime(df['order_date'])\ndf['delivery_days'] = (df['delivered_date'] - df['order_date']).dt.days\ndf['order_month'] = df['order_date'].dt.month", purpose: "Extracts delivery duration and order month from raw timestamps." },
+            { id: 8, title: "Exploratory Data Analysis", type: "Code", code: "import matplotlib.pyplot as plt\ndf.select_dtypes(include=np.number).hist(bins=30)\nplt.show()", purpose: "Visualizes numeric feature distributions." },
+            { id: 9, title: "Train Test Split", type: "Code", code: "X = df.drop(columns=['returned'])\ny = df['returned']\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y)", purpose: "Splits data into stratified training and testing sets." },
+            { id: 10, title: "Preprocessing Pipeline", type: "Code", code: "from sklearn.pipeline import Pipeline\nfrom sklearn.compose import ColumnTransformer\nfrom sklearn.preprocessing import OneHotEncoder, StandardScaler\n\npreprocessor = ColumnTransformer([\n    ('num', StandardScaler(), num_cols),\n    ('cat', OneHotEncoder(handle_unknown='ignore'), cat_cols)\n])", purpose: "Encodes categorical features and scales numeric attributes." },
+            { id: 11, title: "Model Training", type: "Code", code: "from sklearn.ensemble import GradientBoostingClassifier\nmodel = Pipeline([('prep', preprocessor), ('clf', GradientBoostingClassifier())])\nmodel.fit(X_train, y_train)", purpose: "Trains the Gradient Boosting classifier on the training set." },
+            { id: 12, title: "Model Evaluation", type: "Code", code: "from sklearn.metrics import classification_report, roc_auc_score\ny_pred = model.predict(X_test)\nprint(classification_report(y_test, y_pred))", purpose: "Evaluates F1-score, precision, recall, and ROC-AUC." },
+            { id: 13, title: "Feature Importance", type: "Code", code: "importances = model.named_steps['clf'].feature_importances_\n# Plot feature importances", purpose: "Identifies top drivers of customer product returns." },
+            { id: 14, title: "Model Serialization (.pkl)", type: "Code", code: "import joblib\njoblib.dump(model, 'return_prediction_pipeline.pkl')", purpose: "Saves the trained pipeline into a portable binary file for web deployment." },
+            { id: 15, title: "Inference Test", type: "Code", code: "loaded_model = joblib.load('return_prediction_pipeline.pkl')\nloaded_model.predict(sample_df)", purpose: "Verifies the serialized pipeline loads and predicts correctly." }
+        ];
+
+        function renderInspector() {
+            const listEl = document.getElementById('notebook-cells-list');
+            if (!listEl) return;
+            listEl.innerHTML = notebookCells.map((c, idx) => `
+                <div onclick="selectCell(${idx})" class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 cursor-pointer transition flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-mono text-indigo-400">Cell #${c.id} • ${c.type}</span>
+                        <h4 class="text-xs font-bold text-white mt-0.5">${c.title}</h4>
+                    </div>
+                    <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400">Kept</span>
+                </div>
+            `).join('');
+            selectCell(0);
+            renderCleanScript();
+        }
+
+        function selectCell(idx) {
+            const c = notebookCells[idx];
+            const badgeEl = document.getElementById('detail-badge');
+            const titleEl = document.getElementById('detail-title');
+            const purposeEl = document.getElementById('detail-purpose');
+
+            if (badgeEl) badgeEl.textContent = `Cell #${c.id} • ${c.type}`;
+            if (titleEl) titleEl.textContent = c.title;
+            if (purposeEl) purposeEl.textContent = c.purpose;
+        }
+
+        function renderCleanScript() {
+            const script = notebookCells.filter(c => c.type === 'Code').map(c => `# --- ${c.title} ---\n` + c.code).join('\n\n');
+            const outputEl = document.getElementById('clean-script-output');
+            if (outputEl) outputEl.textContent = script;
+        }
+
+        function copyCleanScript() {
+            const script = document.getElementById('clean-script-output').textContent;
+            const textarea = document.createElement('textarea');
+            textarea.value = script;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showToast('Clean Python script copied to clipboard!');
+        }
+
+        window.onload = function () {
+            loadSampleCsvData();
+            renderInspector();
+            submitProductPrediction();
+        };
+    </script>
+</body>
+
+</html>

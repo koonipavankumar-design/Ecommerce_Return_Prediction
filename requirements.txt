@@ -4,4 +4,6 @@ matplotlib
 seaborn
 scikit-learn
 joblib
-streamlit
+fastapi
+uvicorn
+python-multipart
