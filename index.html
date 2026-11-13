@@ -115,11 +115,11 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button onclick="fillDemoProduct('Nike Running Shoes', 'Fashion', 145, 40, 0, 9, 'Europe')"
+                    <button onclick="fillDemoProduct('Nike Running Shoes', 'Fashion', 145, 40, 0, 9, 'North', 'COD', 1, 24, 'Male')"
                         class="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-medium transition cursor-pointer">
                         Sample: High-Risk Shoes
                     </button>
-                    <button onclick="fillDemoProduct('Stainless Steel Kettle', 'Home & Kitchen', 65, 10, 8, 3, 'North')"
+                    <button onclick="fillDemoProduct('Stainless Steel Kettle', 'Home', 65, 10, 8, 3, 'Central', 'Credit Card', 1, 45, 'Female')"
                         class="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-medium transition cursor-pointer">
                         Sample: Safe Kitchen Item
                     </button>
@@ -153,9 +153,11 @@
                                 class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 cursor-pointer">
                                 <option value="Electronics" selected>Electronics</option>
                                 <option value="Fashion">Fashion</option>
-                                <option value="Home & Kitchen">Home & Kitchen</option>
+                                <option value="Home">Home</option>
                                 <option value="Sports">Sports</option>
                                 <option value="Beauty">Beauty</option>
+                                <option value="Grocery">Grocery</option>
+                                <option value="Toys">Toys</option>
                             </select>
                         </div>
 
@@ -164,9 +166,10 @@
                             <select id="prod-region"
                                 class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 cursor-pointer">
                                 <option value="North" selected>North</option>
-                                <option value="Europe">Europe</option>
-                                <option value="Asia">Asia</option>
                                 <option value="South">South</option>
+                                <option value="East">East</option>
+                                <option value="West">West</option>
+                                <option value="Central">Central</option>
                             </select>
                         </div>
 
@@ -184,36 +187,52 @@
                         </div>
 
                         <div class="space-y-1.5">
+                            <label for="prod-quantity" class="text-xs font-medium text-slate-300">Quantity</label>
+                            <input type="number" id="prod-quantity" value="1" min="1" max="20" step="1" required
+                                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="prod-payment" class="text-xs font-medium text-slate-300">Payment Method</label>
+                            <select id="prod-payment"
+                                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 cursor-pointer">
+                                <option value="Credit Card" selected>Credit Card</option>
+                                <option value="COD">Cash on Delivery (COD)</option>
+                                <option value="Debit Card">Debit Card</option>
+                                <option value="UPI">UPI</option>
+                                <option value="PayPal">PayPal</option>
+                                <option value="Wallet">Wallet</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="prod-customer-age" class="text-xs font-medium text-slate-300">Customer Age</label>
+                            <input type="number" id="prod-customer-age" value="32" min="16" max="99" step="1" required
+                                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-indigo-500">
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="prod-customer-gender" class="text-xs font-medium text-slate-300">Customer Gender</label>
+                            <select id="prod-customer-gender"
+                                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 cursor-pointer">
+                                <option value="Female" selected>Female</option>
+                                <option value="Male">Male</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1.5">
                             <label for="prod-shipping" class="text-xs font-medium text-slate-300">Shipping Cost
                                 ($)</label>
-                            <input type="number" id="prod-shipping" value="0" min="0" max="200" step="0.5" required
+                            <input type="number" id="prod-shipping" value="5" min="0" max="200" step="0.5" required
                                 class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-indigo-500">
                         </div>
 
                         <div class="space-y-1.5">
                             <label for="prod-delivery" class="text-xs font-medium text-slate-300">Estimated Delivery
                                 Days</label>
-                            <input type="number" id="prod-delivery" value="6" min="1" max="45" step="1" required
+                            <input type="number" id="prod-delivery" value="4" min="1" max="45" step="1" required
                                 class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-indigo-500">
-                        </div>
-
-                        <div class="sm:col-span-2 space-y-1.5">
-                            <label for="prod-month" class="text-xs font-medium text-slate-300">Order Month</label>
-                            <select id="prod-month"
-                                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 cursor-pointer">
-                                <option value="1">January</option>
-                                <option value="2">February</option>
-                                <option value="3">March</option>
-                                <option value="4">April</option>
-                                <option value="5">May</option>
-                                <option value="6">June</option>
-                                <option value="7">July</option>
-                                <option value="8">August</option>
-                                <option value="9">September</option>
-                                <option value="10">October</option>
-                                <option value="11" selected>November (Peak Season)</option>
-                                <option value="12">December (Holiday Peak)</option>
-                            </select>
                         </div>
 
                         <div class="sm:col-span-2 pt-2">
@@ -458,7 +477,7 @@
 
         const testedProductsHistory = [];
 
-        function fillDemoProduct(name, category, price, discount, shipping, delivery, region) {
+        function fillDemoProduct(name, category, price, discount, shipping, delivery, region, payment, qty, age, gender) {
             const nameEl = document.getElementById('prod-name');
             const catEl = document.getElementById('prod-category');
             const priceEl = document.getElementById('prod-price');
@@ -466,6 +485,10 @@
             const shipEl = document.getElementById('prod-shipping');
             const delEl = document.getElementById('prod-delivery');
             const regEl = document.getElementById('prod-region');
+            const payEl = document.getElementById('prod-payment');
+            const qtyEl = document.getElementById('prod-quantity');
+            const ageEl = document.getElementById('prod-customer-age');
+            const genEl = document.getElementById('prod-customer-gender');
 
             if (nameEl) nameEl.value = name;
             if (catEl) catEl.value = category;
@@ -474,11 +497,15 @@
             if (shipEl) shipEl.value = shipping;
             if (delEl) delEl.value = delivery;
             if (regEl) regEl.value = region;
+            if (payEl && payment) payEl.value = payment;
+            if (qtyEl && qty) qtyEl.value = qty;
+            if (ageEl && age) ageEl.value = age;
+            if (genEl && gender) genEl.value = gender;
 
             submitProductPrediction();
         }
 
-        function submitProductPrediction() {
+        async function submitProductPrediction() {
             const nameEl = document.getElementById('prod-name');
             const catEl = document.getElementById('prod-category');
             const regEl = document.getElementById('prod-region');
@@ -486,19 +513,57 @@
             const discEl = document.getElementById('prod-discount');
             const shipEl = document.getElementById('prod-shipping');
             const delEl = document.getElementById('prod-delivery');
-            const monthEl = document.getElementById('prod-month');
+            const payEl = document.getElementById('prod-payment');
+            const qtyEl = document.getElementById('prod-quantity');
+            const ageEl = document.getElementById('prod-customer-age');
+            const genEl = document.getElementById('prod-customer-gender');
 
-            const productName = nameEl ? nameEl.value.trim() || 'Unnamed Product' : 'Product';
+            const productName = nameEl ? nameEl.value.trim() || 'Product' : 'Product';
             const category = catEl ? catEl.value : 'Electronics';
             const region = regEl ? regEl.value : 'North';
             const price = priceEl ? parseFloat(priceEl.value) || 0 : 100;
             const discount = discEl ? parseFloat(discEl.value) || 0 : 10;
             const shipping = shipEl ? parseFloat(shipEl.value) || 0 : 5;
             const deliveryDays = delEl ? parseInt(delEl.value, 10) || 4 : 4;
-            const month = monthEl ? parseInt(monthEl.value, 10) || 6 : 6;
+            const paymentMethod = payEl ? payEl.value : 'Credit Card';
+            const quantity = qtyEl ? parseInt(qtyEl.value, 10) || 1 : 1;
+            const customerAge = ageEl ? parseInt(ageEl.value, 10) || 30 : 30;
+            const customerGender = genEl ? genEl.value : 'Female';
 
-            const probability = computeLocalRiskProbability({ category, region, price, discount, shipping_cost: shipping, delivery_days: deliveryDays, order_month: month });
-            renderProductDemoResult(productName, category, price, discount, deliveryDays, probability);
+            const payload = {
+                product_name: productName,
+                category: category,
+                region: region,
+                price: price,
+                discount: discount,
+                quantity: quantity,
+                payment_method: paymentMethod,
+                customer_age: customerAge,
+                customer_gender: customerGender,
+                shipping_cost: shipping,
+                total_amount: +(price * quantity * (1 - discount / 100)).toFixed(2),
+                profit_margin: 15.0
+            };
+
+            // Attempt live backend inference first
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    renderProductDemoResult(productName, category, price, discount, deliveryDays, data.return_probability, data.will_return, true);
+                    return;
+                }
+            } catch (err) {
+                console.warn('Backend /predict unavailable, using local calculation:', err);
+            }
+
+            // Fallback client-side computation
+            const probability = computeLocalRiskProbability({ category, region, price, discount, shipping_cost: shipping, delivery_days: deliveryDays });
+            renderProductDemoResult(productName, category, price, discount, deliveryDays, probability, probability >= 0.35, false);
         }
 
         function computeLocalRiskProbability(params) {
@@ -508,14 +573,15 @@
             if (params.discount > 20) logOdds += (params.discount - 20) * 0.04;
             if (params.delivery_days > 4) logOdds += (params.delivery_days - 4) * 0.08;
             if (params.price > 200) logOdds += 0.35;
-            if (params.order_month === 11 || params.order_month === 12) logOdds += 0.40;
             const prob = 1 / (1 + Math.exp(-logOdds));
             return Math.min(0.95, Math.max(0.01, prob));
         }
 
-        function renderProductDemoResult(name, category, price, discount, deliveryDays, probability) {
+        function renderProductDemoResult(name, category, price, discount, deliveryDays, probability, willReturn, isLiveApi = false) {
             const pct = (probability * 100).toFixed(1);
-            const willReturn = probability >= 0.35;
+            if (typeof willReturn === 'undefined') {
+                willReturn = probability >= 0.35;
+            }
 
             const nameRes = document.getElementById('demo-result-name');
             if (nameRes) nameRes.textContent = name;
@@ -528,20 +594,22 @@
             if (probText) probText.textContent = `${pct}%`;
             if (barEl) barEl.style.width = `${Math.min(100, Math.max(4, probability * 100))}%`;
 
+            const engineBadge = isLiveApi ? '<span class="text-emerald-400 font-semibold">[FastAPI Model]</span> ' : '';
+
             if (willReturn) {
                 if (verdictEl) {
                     verdictEl.textContent = 'YES — LIKELY RETURN';
                     verdictEl.className = 'text-xl sm:text-2xl font-extrabold text-rose-400 mt-0.5';
                 }
                 if (barEl) barEl.className = 'h-full bg-rose-500 transition-all duration-500';
-                if (expEl) expEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400 mr-1.5"></i>High return probability (${pct}%) driven by <strong>${category}</strong> return trends, <strong>${discount}% discount</strong>, and <strong>${deliveryDays}-day delivery</strong>.`;
+                if (expEl) expEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400 mr-1.5"></i>${engineBadge}High return probability (${pct}%) driven by <strong>${category}</strong> return trends, <strong>${discount}% discount</strong>, and order configuration.`;
             } else {
                 if (verdictEl) {
                     verdictEl.textContent = 'NO — SAFE ORDER';
                     verdictEl.className = 'text-xl sm:text-2xl font-extrabold text-emerald-400 mt-0.5';
                 }
                 if (barEl) barEl.className = 'h-full bg-emerald-500 transition-all duration-500';
-                if (expEl) expEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i>Low return probability (${pct}%). Order parameters for <strong>${name}</strong> ($${price}) indicate strong customer retention.`;
+                if (expEl) expEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i>${engineBadge}Low return probability (${pct}%). Order parameters for <strong>${name}</strong> ($${price}) indicate strong customer retention.`;
             }
 
             testedProductsHistory.unshift({ name, category, price, pct, willReturn });
@@ -579,7 +647,7 @@
         function loadSampleCsvData() {
             const sampleHeaders = ['order_id', 'product_name', 'category', 'region', 'price', 'discount', 'shipping_cost', 'delivery_days', 'order_month', 'returned'];
             const rows = [];
-            const categories = ['Electronics', 'Fashion', 'Home & Kitchen'];
+            const categories = ['Electronics', 'Fashion', 'Home', 'Beauty', 'Sports'];
             for (let i = 1; i <= 100; i++) {
                 const cat = categories[Math.floor(Math.random() * categories.length)];
                 rows.push({
@@ -600,32 +668,59 @@
             renderCsvResults("ecommerce_orders_sample.csv");
         }
 
-        function handleCsvDrop(e) {
+        async function handleCsvDrop(e) {
             e.preventDefault();
             const file = e.dataTransfer.files[0];
-            if (file) parseCsvFile(file);
+            if (file) await processCsvFile(file);
         }
 
-        function handleCsvFileSelected(input) {
+        async function handleCsvFileSelected(input) {
             const file = input.files[0];
-            if (file) parseCsvFile(file);
+            if (file) await processCsvFile(file);
         }
 
-        function parseCsvFile(file) {
+        async function processCsvFile(file) {
+            // First attempt to score the CSV using the live FastAPI /predict-csv endpoint
+            try {
+                showToast('Uploading to ReturnGuard API for ML batch scoring...', 'info');
+                const formData = new FormData();
+                formData.append('file', file);
+                const res = await fetch('/predict-csv', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (res.ok) {
+                    const csvBlob = await res.blob();
+                    const csvText = await csvBlob.text();
+                    parseCsvText(csvText, file.name);
+                    showToast('Successfully scored by FastAPI backend ML model!', 'success');
+                    return;
+                }
+            } catch (err) {
+                console.warn('Backend CSV endpoint unreachable, parsing locally:', err);
+            }
+
+            // Fallback to local parsing
             const reader = new FileReader();
             reader.onload = function (e) {
-                const lines = e.target.result.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                parsedCsvHeaders = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-                parsedCsvRows = [];
-                for (let i = 1; i < lines.length; i++) {
-                    const vals = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-                    const rowObj = {};
-                    parsedCsvHeaders.forEach((h, idx) => { rowObj[h] = vals[idx] || ''; });
-                    parsedCsvRows.push(rowObj);
-                }
-                renderCsvResults(file.name);
+                parseCsvText(e.target.result, file.name);
+                showToast('Parsed CSV locally.', 'info');
             };
             reader.readAsText(file);
+        }
+
+        function parseCsvText(csvText, fileName) {
+            const lines = csvText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            if (lines.length === 0) return;
+            parsedCsvHeaders = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            parsedCsvRows = [];
+            for (let i = 1; i < lines.length; i++) {
+                const vals = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+                const rowObj = {};
+                parsedCsvHeaders.forEach((h, idx) => { rowObj[h] = vals[idx] || ''; });
+                parsedCsvRows.push(rowObj);
+            }
+            renderCsvResults(fileName);
         }
 
         function renderCsvResults(fileName) {
@@ -650,23 +745,34 @@
 
             if (bodyEl) {
                 bodyEl.innerHTML = parsedCsvRows.slice(0, 40).map(row => {
-                    const prob = computeLocalRiskProbability({
-                        category: row['category'] || 'Electronics',
-                        region: row['region'] || 'North',
-                        price: parseFloat(row['price']) || 100,
-                        discount: parseFloat(row['discount']) || 0,
-                        shipping_cost: 5,
-                        delivery_days: parseInt(row['delivery_days']) || 4,
-                        order_month: 6
-                    });
-                    const pct = (prob * 100).toFixed(1);
+                    let prob;
+                    let pct;
+                    if (row['return_risk_percent'] !== undefined && row['return_risk_percent'] !== '') {
+                        pct = parseFloat(row['return_risk_percent']).toFixed(1);
+                        prob = parseFloat(pct) / 100;
+                    } else if (row['return_probability'] !== undefined && row['return_probability'] !== '') {
+                        prob = parseFloat(row['return_probability']);
+                        pct = (prob * 100).toFixed(1);
+                    } else {
+                        prob = computeLocalRiskProbability({
+                            category: row['category'] || 'Electronics',
+                            region: row['region'] || 'North',
+                            price: parseFloat(row['price']) || 100,
+                            discount: parseFloat(row['discount']) || 0,
+                            shipping_cost: parseFloat(row['shipping_cost']) || 5,
+                            delivery_days: parseInt(row['delivery_days']) || 4,
+                            order_month: 6
+                        });
+                        pct = (prob * 100).toFixed(1);
+                    }
+                    const isHigh = prob >= 0.35 || String(row['predicted_return']) === '1';
                     return `
                         <tr class="hover:bg-slate-900/80">
                             <td class="px-4 py-3 text-white">${row['product_name'] || row['order_id'] || 'Item'}</td>
                             <td class="px-4 py-3">${row['category'] || 'General'}</td>
                             <td class="px-4 py-3">$${row['price'] || '100'}</td>
                             <td class="px-4 py-3">${row['returned'] || 'No'}</td>
-                            <td class="px-4 py-3 font-bold ${prob >= 0.35 ? 'text-rose-400' : 'text-emerald-400'}">${pct}%</td>
+                            <td class="px-4 py-3 font-bold ${isHigh ? 'text-rose-400' : 'text-emerald-400'}">${pct}%</td>
                         </tr>
                     `;
                 }).join('');
@@ -678,19 +784,26 @@
                 showToast('No CSV loaded to export.', 'info');
                 return;
             }
-            let csv = [...parsedCsvHeaders, 'predicted_return_prob'].join(',') + '\r\n';
+            const hasBackendScore = parsedCsvHeaders.includes('return_risk_percent') || parsedCsvHeaders.includes('return_probability');
+            let outHeaders = [...parsedCsvHeaders];
+            if (!hasBackendScore) {
+                outHeaders.push('predicted_return_prob');
+            }
+            let csv = outHeaders.join(',') + '\r\n';
             parsedCsvRows.forEach(row => {
-                const prob = computeLocalRiskProbability({
-                    category: row['category'] || 'Electronics',
-                    region: row['region'] || 'North',
-                    price: parseFloat(row['price']) || 100,
-                    discount: parseFloat(row['discount']) || 0,
-                    shipping_cost: 5,
-                    delivery_days: parseInt(row['delivery_days']) || 4,
-                    order_month: 6
-                });
                 const vals = parsedCsvHeaders.map(h => row[h] || '');
-                vals.push(prob.toFixed(4));
+                if (!hasBackendScore) {
+                    const prob = computeLocalRiskProbability({
+                        category: row['category'] || 'Electronics',
+                        region: row['region'] || 'North',
+                        price: parseFloat(row['price']) || 100,
+                        discount: parseFloat(row['discount']) || 0,
+                        shipping_cost: parseFloat(row['shipping_cost']) || 5,
+                        delivery_days: parseInt(row['delivery_days']) || 4,
+                        order_month: 6
+                    });
+                    vals.push(prob.toFixed(4));
+                }
                 csv += vals.join(',') + '\r\n';
             });
             const link = document.createElement('a');

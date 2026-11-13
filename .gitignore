@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+env/
+venv/
+.venv/
+ENV/
+
+# Temporary / Backup artifacts
+ecommerce_return_model_temp.pkl
+ecommerce_return_model_backup.pkl
+*.log
+
+# Environment variables
+.env
+
+# Editor & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
